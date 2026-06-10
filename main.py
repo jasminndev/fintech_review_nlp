@@ -14,13 +14,13 @@ from sklearn.model_selection import train_test_split
 APPS = {
     "payme": "uz.dida.payme",
     "click": "air.com.ssdsoftwaresolutions.clickuz",
-    "uzum":  "uz.kapitalbank.android"
+    "uzum": "uz.kapitalbank.android"
 }
 
 REVIEWS_PER_APP = 1000
 RUN_EVERY_HOUR = 1
-RESULTS_FILE    = "results.json"
-TRAINING_CSV    = "labeled_reviews.csv"
+RESULTS_FILE = "results.json"
+TRAINING_CSV = "labeled_reviews.csv"
 
 
 def clean_text(text):
@@ -53,7 +53,7 @@ def train_model():
 
     vectorizer = TfidfVectorizer(stop_words=uzbek_stops, max_features=10000, ngram_range=(1, 2))
     x_train_vec = vectorizer.fit_transform(x_train)
-    x_test_vec  = vectorizer.transform(x_test)
+    x_test_vec = vectorizer.transform(x_test)
 
     model = LogisticRegression(max_iter=1000, class_weight='balanced')
     model.fit(x_train_vec, y_train)
@@ -91,7 +91,7 @@ def predict_batch(df, model, vectorizer):
 
 def predict_sentiment(text, model, vectorizer):
     text = clean_text(text)
-    vec  = vectorizer.transform([text])
+    vec = vectorizer.transform([text])
     pred = model.predict(vec)[0]
     return "Positive 😊" if pred == 1 else "Negative 😡"
 
@@ -99,11 +99,11 @@ def predict_sentiment(text, model, vectorizer):
 def calculate_ranking(df):
     results = []
     for app in df['app'].unique():
-        app_df   = df[df['app'] == app]
-        total    = len(app_df)
+        app_df = df[df['app'] == app]
+        total = len(app_df)
         positive = (app_df['sentiment'] == 1).sum()
         negative = (app_df['sentiment'] == -1).sum()
-        score    = round(positive / total * 100, 1) if total > 0 else 0
+        score = round(positive / total * 100, 1) if total > 0 else 0
         results.append({
             'app': app, 'total_reviews': int(total),
             'positive': int(positive), 'negative': int(negative),
@@ -119,23 +119,23 @@ def calculate_ranking(df):
 
 def print_ranking(results_df, timestamp):
     medals = ['🥇', '🥈', '🥉']
-    print("\n" + "="*55)
+    print("\n" + "=" * 55)
     print(f"  FINTECH APP RANKINGS — {timestamp}")
-    print("="*55)
+    print("=" * 55)
     for _, row in results_df.iterrows():
-        medal   = medals[int(row['rank']) - 1]
+        medal = medals[int(row['rank']) - 1]
         bar_len = int(row['positivity_score'] / 2)
-        bar     = '█' * bar_len + '░' * (50 - bar_len)
+        bar = '█' * bar_len + '░' * (50 - bar_len)
         print(f"\n{medal} #{int(row['rank'])} {row['app'].upper()}")
         print(f"   Positivity : {row['positivity_score']}%")
         print(f"   Positive   : {row['positive']} reviews")
         print(f"   Negative   : {row['negative']} reviews")
         print(f"   Total      : {row['total_reviews']} reviews")
         print(f"   [{bar}]")
-    print("\n" + "="*55)
+    print("\n" + "=" * 55)
     winner = results_df.iloc[0]
     print(f"🏆 BEST APP: {winner['app'].upper()} ({winner['positivity_score']}% positive)")
-    print("="*55 + "\n")
+    print("=" * 55 + "\n")
 
 
 def save_results(results_df, timestamp):
